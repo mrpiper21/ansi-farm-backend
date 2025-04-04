@@ -10,6 +10,7 @@ const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const resourcRoutes_1 = __importDefault(require("./routes/resourcRoutes"));
 const db_1 = __importDefault(require("./config/db"));
 const morgan_1 = __importDefault(require("morgan"));
+const seeResources_1 = require("./seeResources");
 const app = (0, express_1.default)();
 // Middleware
 app.use((0, cors_1.default)());
@@ -21,6 +22,7 @@ app.use((0, morgan_1.default)("dev"));
 // Routes
 app.use("/api/users", userRoutes_1.default);
 app.use("/api", resourcRoutes_1.default);
+(0, seeResources_1.seedDatabase)();
 // Health check
 app.get('/', (req, res) => {
     res.json({ message: 'API is running' });

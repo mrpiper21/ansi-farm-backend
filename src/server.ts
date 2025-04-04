@@ -5,6 +5,7 @@ import userRoutes from './routes/userRoutes';
 import resourceRoute from "./routes/resourcRoutes";
 import db from "./config/db";
 import morgan from "morgan";
+import { seedDatabase } from "./seeResources";
 
 const app: Express = express();
 
@@ -18,8 +19,10 @@ app.use(morgan("dev"));
 db();
 
 // Routes
+
 app.use("/api/users", userRoutes);
 app.use("/api", resourceRoute);
+seedDatabase();
 
 // Health check
 app.get('/', (req: Request, res: Response) => {
