@@ -1,7 +1,10 @@
 
 
-import { createResource, getCategories, getResources } from '@/controllers/resource-controller';
-import { login, registerUser } from '../controllers/user-controller';
+import {
+	createResource,
+	getCategories,
+	getResources,
+} from "./../controllers/resource-controller";
 import { Router } from 'express';
 // import authenticate from '@/middlewares/auth';
 
