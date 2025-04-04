@@ -3,41 +3,31 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// src/db/connectDB.ts
 const mongoose_1 = __importDefault(require("mongoose"));
-const env_1 = require("../config/env");
+// Debug: Verify the URI is loaded
+console.log("DB Connection - MONGO_URI:", process.env.MONGO_URI ? "*****" : "MISSING");
+const MONGO_URI = process.env.MONGO_URI; // Type assertion since we verified it exists
+if (!MONGO_URI) {
+    throw new Error("MongoDB URI is required in environment variables");
+}
 const connectDB = async () => {
     try {
-        if (!env_1.MONGO_URI) {
-            throw new Error("MongoDB connection URI is not defined");
-        }
-        await mongoose_1.default.connect(env_1.MONGO_URI, {
+        console.log("Attempting to connect to MongoDB...");
+        await mongoose_1.default.connect(MONGO_URI, {
             serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-            maxPoolSize: 10, // Maintain up to 10 socket connections
-            retryWrites: true,
-            w: "majority",
+            socketTimeoutMS: 30000,
         });
         console.log("MongoDB connected successfully");
     }
     catch (error) {
-        console.error("MongoDB connection error:", error);
-        process.exit(1);
+        console.error("MongoDB connection failed:", error);
+        throw error; // Rethrow to handle in server startup
     }
 };
-// Connection events
-mongoose_1.default.connection.on("connected", () => {
-    console.log("Mongoose connected to DB cluster");
-});
-mongoose_1.default.connection.on("error", (error) => {
-    console.error("Mongoose connection error:", error);
+mongoose_1.default.connection.on("error", (err) => {
+    console.error("Mongoose connection error:", err);
 });
 mongoose_1.default.connection.on("disconnected", () => {
     console.log("Mongoose disconnected");
-});
-// Close the Mongoose connection when the Node process ends
-process.on("SIGINT", async () => {
-    await mongoose_1.default.connection.close();
-    process.exit(0);
 });
 exports.default = connectDB;
