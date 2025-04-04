@@ -2,23 +2,24 @@ import 'dotenv/config';
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import userRoutes from './routes/userRoutes';
-import db from './config/db';
-import morgan from 'morgan';
+import resourceRoute from "./routes/resourcRoutes";
+import db from "./config/db";
+import morgan from "morgan";
 
 const app: Express = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }))
-app.use(morgan("dev"))
-
+app.use(express.urlencoded({ extended: false }));
+app.use(morgan("dev"));
 
 // Database connection;
-db()
+db();
 
 // Routes
-app.use('/api/users', userRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api", resourceRoute);
 
 // Health check
 app.get('/', (req: Request, res: Response) => {
