@@ -1,7 +1,7 @@
 // scripts/seedResources.js
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import Resource from './model/Resource';
+import Resource from '../model/Resource';
 
 dotenv.config();
 

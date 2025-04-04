@@ -5,7 +5,7 @@ import userRoutes from './routes/userRoutes';
 import resourceRoute from "./routes/resourcRoutes";
 import db from "./config/db";
 import morgan from "morgan";
-import { seedDatabase } from "./seeResources";
+import { seedDatabase } from "./config/seeResources";
 
 const app: Express = express();
 

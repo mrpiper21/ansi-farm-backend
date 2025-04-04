@@ -10,7 +10,7 @@ const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const resourcRoutes_1 = __importDefault(require("./routes/resourcRoutes"));
 const db_1 = __importDefault(require("./config/db"));
 const morgan_1 = __importDefault(require("morgan"));
-const seeResources_1 = require("./seeResources");
+const seeResources_1 = require("./config/seeResources");
 const app = (0, express_1.default)();
 // Middleware
 app.use((0, cors_1.default)());
