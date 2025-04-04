@@ -1,45 +1,39 @@
-// src/db/connectDB.ts
 import mongoose from "mongoose";
-import { MONGO_URI } from "../config/env";
+
+// Debug: Verify the URI is loaded
+console.log(
+	"DB Connection - MONGO_URI:",
+	process.env.MONGO_URI ? "*****" : "MISSING"
+);
+
+const MONGO_URI = process.env.MONGO_URI as string; // Type assertion since we verified it exists
+
+if (!MONGO_URI) {
+	throw new Error("MongoDB URI is required in environment variables");
+}
 
 const connectDB = async () => {
 	try {
-		if (!MONGO_URI) {
-			throw new Error("MongoDB connection URI is not defined");
-		}
+		console.log("Attempting to connect to MongoDB...");
 
 		await mongoose.connect(MONGO_URI, {
 			serverSelectionTimeoutMS: 5000,
-			socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-			maxPoolSize: 10, // Maintain up to 10 socket connections
-			retryWrites: true,
-			w: "majority",
+			socketTimeoutMS: 30000,
 		});
 
 		console.log("MongoDB connected successfully");
 	} catch (error) {
-		console.error("MongoDB connection error:", error);
-		process.exit(1);
+		console.error("MongoDB connection failed:", error);
+		throw error; // Rethrow to handle in server startup
 	}
 };
 
-// Connection events
-mongoose.connection.on("connected", () => {
-	console.log("Mongoose connected to DB cluster");
-});
-
-mongoose.connection.on("error", (error) => {
-	console.error("Mongoose connection error:", error);
+mongoose.connection.on("error", (err) => {
+	console.error("Mongoose connection error:", err);
 });
 
 mongoose.connection.on("disconnected", () => {
 	console.log("Mongoose disconnected");
-});
-
-// Close the Mongoose connection when the Node process ends
-process.on("SIGINT", async () => {
-	await mongoose.connection.close();
-	process.exit(0);
 });
 
 export default connectDB;
