@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCategories = exports.getResources = exports.createResource = void 0;
+exports.getResourceById = exports.getCategories = exports.getResources = exports.createResource = void 0;
 const Resource_1 = __importDefault(require("../model/Resource"));
 // Create a new resource
 const createResource = async (req, res) => {
@@ -93,3 +93,25 @@ const getCategories = async (req, res) => {
     }
 };
 exports.getCategories = getCategories;
+const getResourceById = async (req, res) => {
+    try {
+        const resource = await Resource_1.default.findById(req.params.id);
+        if (!resource) {
+            return res.status(404).json({
+                success: false,
+                message: "Resource not found",
+            });
+        }
+        res.json({
+            success: true,
+            data: resource,
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+exports.getResourceById = getResourceById;

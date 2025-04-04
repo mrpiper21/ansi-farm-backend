@@ -92,3 +92,28 @@ export const getCategories = async (req: any, res: any) => {
 		});
 	}
 };
+
+
+
+export const getResourceById = async (req: any, res: any) => {
+	try {
+		const resource = await Resource.findById(req.params.id);
+
+		if (!resource) {
+			return res.status(404).json({
+				success: false,
+				message: "Resource not found",
+			});
+		}
+
+		res.json({
+			success: true,
+			data: resource,
+		});
+	} catch (error: any) {
+		res.status(500).json({
+			success: false,
+			message: error.message,
+		});
+	}
+};
