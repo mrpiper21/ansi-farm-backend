@@ -3,14 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-require("dotenv/config"); // This should be at the very top
+const dotenv_1 = __importDefault(require("dotenv"));
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const resourcRoutes_1 = __importDefault(require("./routes/resourcRoutes"));
 const db_1 = __importDefault(require("./config/db"));
 const morgan_1 = __importDefault(require("morgan"));
-const seeResources_1 = require("./config/seeResources");
+dotenv_1.default.config();
 // Verify environment variables are loaded
 console.log("Environment:", {
     MONGO_URI: process.env.MONGO_URI ? "*****" : "NOT FOUND",
@@ -27,8 +27,7 @@ const startServer = async () => {
     try {
         // 1. First connect to database
         await (0, db_1.default)();
-        // 2. Then seed database if needed
-        await (0, seeResources_1.seedDatabase)();
+        // await seedDatabase();
         // 3. Only then start the server
         const PORT = parseInt(process.env.PORT || "5000", 10);
         app.listen(PORT, () => {
@@ -47,10 +46,8 @@ app.use("/api", resourcRoutes_1.default);
 app.get("/", (req, res) => {
     res.json({ message: "API is running" });
 });
-// Error handling
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ error: "Internal Server Error" });
 });
-// Start the server
 startServer();

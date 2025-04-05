@@ -268,7 +268,7 @@ Store in well-ventilated cribs to prevent aflatoxin contamination.`
 // Function to seed database
 export const seedDatabase = async () => {
   try {
-    await Resource.deleteMany(); // Clear existing data
+    await Resource.deleteMany();
     await Resource.insertMany(resourcesData);
     console.log('Database seeded successfully!');
     process.exit(0);

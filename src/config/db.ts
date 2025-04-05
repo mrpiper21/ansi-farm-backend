@@ -1,39 +1,23 @@
+// config/db.ts
 import mongoose from "mongoose";
-
-// Debug: Verify the URI is loaded
-console.log(
-	"DB Connection - MONGO_URI:",
-	process.env.MONGO_URI ? "*****" : "MISSING"
-);
-
-const MONGO_URI = process.env.MONGO_URI as string; // Type assertion since we verified it exists
-
-if (!MONGO_URI) {
-	throw new Error("MongoDB URI is required in environment variables");
-}
 
 const connectDB = async () => {
 	try {
-		console.log("Attempting to connect to MongoDB...");
+		if (!process.env.MONGO_URI) {
+			throw new Error("MONGO_URI environment variable is not defined");
+		}
 
-		await mongoose.connect(MONGO_URI, {
-			serverSelectionTimeoutMS: 5000,
-			socketTimeoutMS: 30000,
-		});
-
-		console.log("MongoDB connected successfully");
+		const conn = await mongoose.connect(process.env.MONGO_URI);
+		console.log(`MongoDB Connected: ${conn.connection.host}`);
+		return conn;
 	} catch (error) {
-		console.error("MongoDB connection failed:", error);
-		throw error; // Rethrow to handle in server startup
+		console.error(
+			`Error connecting to MongoDB: ${
+				error instanceof Error ? error.message : error
+			}`
+		);
+		process.exit(1);
 	}
 };
-
-mongoose.connection.on("error", (err) => {
-	console.error("Mongoose connection error:", err);
-});
-
-mongoose.connection.on("disconnected", () => {
-	console.log("Mongoose disconnected");
-});
 
 export default connectDB;
