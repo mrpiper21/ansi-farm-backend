@@ -6,10 +6,10 @@ import upload from '../config/multer';
 const router = express.Router();
 
 router.post(
-  '/create',
-//   protect,
-  upload.single('image'),
-  createProduct
+	"/create/:id",
+	//   protect,
+	upload.single("image"),
+	createProduct
 );
 
 router.get('/', getProducts);

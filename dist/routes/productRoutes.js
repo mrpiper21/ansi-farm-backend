@@ -8,8 +8,8 @@ const product_controller_1 = require("../controllers/product-controller");
 // import { protect } from '../middleware/authMiddleware';
 const multer_1 = __importDefault(require("../config/multer"));
 const router = express_1.default.Router();
-router.post('/create', 
+router.post("/create/:id", 
 //   protect,
-multer_1.default.single('image'), product_controller_1.createProduct);
+multer_1.default.single("image"), product_controller_1.createProduct);
 router.get('/', product_controller_1.getProducts);
 exports.default = router;

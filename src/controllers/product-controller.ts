@@ -4,53 +4,53 @@ import { uploadToCloudinary } from '../config/cloudinary'; // Optional for image
 
 export const createProduct = async (req: any, res: any) => {
   try {
-    const { name, category, description, price, quantity } = req.body;
-    const farmerId = req.user._id; // Assuming you have authentication middleware
-    
-    // Validate required fields
-    if (!name || !category || !price) {
-      return res.status(400).json({ 
-        success: false,
-        message: 'Name, category, and price are required fields'
-      });
-    }
+		const { name, category, description, price, quantity } = req.body;
+		const farmerId = req.params.id;
+		console.log("user id ----- ", farmerId);
 
-    // Handle image upload if exists
-    let imageUrl;
-    if (req.file) {
-      const uploadResult = await uploadToCloudinary(req.file);
-      imageUrl = uploadResult.secure_url;
-    } else if (req.body.image) {
-      // If image is passed as base64 or URL
-      imageUrl = req.body.image;
-    }
+		// Validate required fields
+		if (!name || !category || !price) {
+			return res.status(400).json({
+				success: false,
+				message: "Name, category, and price are required fields",
+			});
+		}
 
-    // Create new product
-    const newProduct: IProduct = new Product({
-      name,
-      category,
-      description,
-      price: parseFloat(price),
-      quantity,
-      imageUrl,
-      farmer: farmerId
-    });
+		// Handle image upload if exists
+		let imageUrl;
+		if (req.file) {
+			const uploadResult = await uploadToCloudinary(req.file);
+			imageUrl = uploadResult.secure_url;
+		} else if (req.body.image) {
+			// If image is passed as base64 or URL
+			imageUrl = req.body.image;
+		}
 
-    await newProduct.save();
+		// Create new product
+		const newProduct: IProduct = new Product({
+			name,
+			category,
+			description,
+			price: parseFloat(price),
+			quantity,
+			imageUrl,
+			farmer: farmerId,
+		});
 
-    res.status(201).json({
-      success: true,
-      data: newProduct,
-      message: 'Product listed successfully'
-    });
+		await newProduct.save();
 
-  } catch (error) {
-    console.error('Error creating product:', error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Server error while creating product'
-    });
-  }
+		res.status(201).json({
+			success: true,
+			data: newProduct,
+			message: "Product listed successfully",
+		});
+	} catch (error) {
+		console.error("Error creating product:", error);
+		res.status(500).json({
+			success: false,
+			message: "Server error while creating product",
+		});
+	}
 };
 
 export const getProducts = async (req: Request, res: Response) => {

@@ -9,12 +9,13 @@ const cloudinary_1 = require("../config/cloudinary"); // Optional for image uplo
 const createProduct = async (req, res) => {
     try {
         const { name, category, description, price, quantity } = req.body;
-        const farmerId = req.user._id; // Assuming you have authentication middleware
+        const farmerId = req.params.id;
+        console.log("user id ----- ", farmerId);
         // Validate required fields
         if (!name || !category || !price) {
             return res.status(400).json({
                 success: false,
-                message: 'Name, category, and price are required fields'
+                message: "Name, category, and price are required fields",
             });
         }
         // Handle image upload if exists
@@ -35,20 +36,20 @@ const createProduct = async (req, res) => {
             price: parseFloat(price),
             quantity,
             imageUrl,
-            farmer: farmerId
+            farmer: farmerId,
         });
         await newProduct.save();
         res.status(201).json({
             success: true,
             data: newProduct,
-            message: 'Product listed successfully'
+            message: "Product listed successfully",
         });
     }
     catch (error) {
-        console.error('Error creating product:', error);
+        console.error("Error creating product:", error);
         res.status(500).json({
             success: false,
-            message: 'Server error while creating product'
+            message: "Server error while creating product",
         });
     }
 };
