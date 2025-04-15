@@ -8,6 +8,7 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const resourcRoutes_1 = __importDefault(require("./routes/resourcRoutes"));
+const productRoutes_1 = __importDefault(require("./routes/productRoutes"));
 const db_1 = __importDefault(require("./config/db"));
 const morgan_1 = __importDefault(require("morgan"));
 dotenv_1.default.config();
@@ -42,6 +43,7 @@ const startServer = async () => {
 // Routes
 app.use("/api/users", userRoutes_1.default);
 app.use("/api", resourcRoutes_1.default);
+app.use("/api/products", productRoutes_1.default);
 // Health check
 app.get("/", (req, res) => {
     res.json({ message: "API is running" });

@@ -3,6 +3,7 @@ import express, { Express, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import userRoutes from "./routes/userRoutes";
 import resourceRoute from "./routes/resourcRoutes";
+import productRoute from "./routes/productRoutes";
 import db from "./config/db";
 import morgan from "morgan";
 import { seedDatabase } from "./config/seeResources";
@@ -43,6 +44,7 @@ const startServer = async () => {
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api", resourceRoute);
+app.use("/api/products", productRoute);
 
 // Health check
 app.get("/", (req: Request, res: Response) => {
