@@ -1,7 +1,11 @@
 import express from 'express';
-import { createProduct, getProducts } from '../controllers/product-controller';
+import {
+	createProduct,
+	getFarmerProducts,
+	getProducts,
+} from "../controllers/product-controller";
 // import { protect } from '../middleware/authMiddleware';
-import upload from '../config/multer';
+import upload from "../config/multer";
 
 const router = express.Router();
 
@@ -12,6 +16,7 @@ router.post(
 	createProduct
 );
 
-router.get('/', getProducts);
+router.get("/", getProducts);
+router.get("/farmer/:id", getFarmerProducts);
 
 export default router;

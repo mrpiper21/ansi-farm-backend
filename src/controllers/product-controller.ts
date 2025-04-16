@@ -75,3 +75,21 @@ export const getProducts = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const getFarmerProducts = async (req: any, res: any) => {
+	try {
+		const farmerId = req.params.id;
+
+		const products = await Product.find({ farmer: farmerId });
+
+		res.status(200).json({
+			success: true,
+			data: products,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Server error while fetching products",
+		});
+	}
+};

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProducts = exports.createProduct = void 0;
+exports.getFarmerProducts = exports.getProducts = exports.createProduct = void 0;
 const productModel_1 = __importDefault(require("../model/productModel"));
 const cloudinary_1 = require("../config/cloudinary"); // Optional for image uploads
 const createProduct = async (req, res) => {
@@ -75,3 +75,20 @@ const getProducts = async (req, res) => {
     }
 };
 exports.getProducts = getProducts;
+const getFarmerProducts = async (req, res) => {
+    try {
+        const farmerId = req.params.id;
+        const products = await productModel_1.default.find({ farmer: farmerId });
+        res.status(200).json({
+            success: true,
+            data: products,
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Server error while fetching products",
+        });
+    }
+};
+exports.getFarmerProducts = getFarmerProducts;

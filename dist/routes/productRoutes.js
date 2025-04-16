@@ -11,5 +11,6 @@ const router = express_1.default.Router();
 router.post("/create/:id", 
 //   protect,
 multer_1.default.single("image"), product_controller_1.createProduct);
-router.get('/', product_controller_1.getProducts);
+router.get("/", product_controller_1.getProducts);
+router.get("/farmer/:id", product_controller_1.getFarmerProducts);
 exports.default = router;
