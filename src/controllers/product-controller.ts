@@ -1,6 +1,5 @@
-import { Request, Response } from 'express';
 import Product, { IProduct } from "../model/productModel";
-import { uploadToCloudinary } from '../config/cloudinary'; // Optional for image uploads
+import { uploadToCloudinary } from "../config/cloudinary"; // Optional for image uploads
 import mongoose from "mongoose";
 
 export const createProduct = async (req: any, res: any) => {
@@ -54,24 +53,62 @@ export const createProduct = async (req: any, res: any) => {
 	}
 };
 
-export const getProducts = async (req: Request, res: Response) => {
+export const getProducts = async (req: any, res: any) => {
+	console.log("Fetching farmer produce...");
 	try {
-		const { category } = req.query;
-		const filter = category ? { category } : {};
+		const { category, farmerId } = req.query;
+
+		// Create filter object
+		const filter: any = {};
+
+		if (category) {
+			if (
+				!["fruits", "vegetables", "grains", "dairy", "herbs"].includes(category)
+			) {
+				return res.status(400).json({
+					success: false,
+					message: "Invalid product category",
+				});
+			}
+			filter.category = category;
+		}
+
+		if (farmerId) {
+			if (!mongoose.Types.ObjectId.isValid(farmerId)) {
+				return res.status(400).json({
+					success: false,
+					message: "Invalid farmer ID",
+				});
+			}
+			filter.farmer = farmerId;
+		}
+
+		console.log("Query filter:", filter);
 
 		const products = await Product.find(filter)
-			.populate("farmer", "name email")
-			.sort({ createdAt: -1 });
+			.populate("farmer", "name email avatar")
+			.sort({ createdAt: -1 })
+			.lean();
+
+		console.log(`Found ${products.length} products`);
 
 		res.status(200).json({
 			success: true,
+			count: products.length,
 			data: products,
 		});
 	} catch (error) {
 		console.error("Error fetching products:", error);
+		let errorMessage = "Server error while fetching products";
+		if (error instanceof mongoose.Error.ValidationError) {
+			errorMessage = "Data validation error";
+		} else if (error instanceof mongoose.Error.CastError) {
+			errorMessage = "Invalid data format";
+		}
+
 		res.status(500).json({
 			success: false,
-			message: "Server error while fetching products",
+			message: errorMessage,
 		});
 	}
 };

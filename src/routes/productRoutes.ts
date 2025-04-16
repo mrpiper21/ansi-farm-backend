@@ -18,8 +18,8 @@ router.post(
 	createProduct
 );
 
-router.get("/", getProducts);
 router.get("/farmer/:id", getFarmerProducts);
+router.get("/farmer/produce", getProducts);
 router.put("/farmer/produce/update/:id", updateProduct);
 router.delete("/farmer/produce/delete/:id", deleteProduct);
 

@@ -56,22 +56,53 @@ const createProduct = async (req, res) => {
 };
 exports.createProduct = createProduct;
 const getProducts = async (req, res) => {
+    console.log("Fetching farmer produce...");
     try {
-        const { category } = req.query;
-        const filter = category ? { category } : {};
+        const { category, farmerId } = req.query;
+        // Create filter object
+        const filter = {};
+        if (category) {
+            if (!["fruits", "vegetables", "grains", "dairy", "herbs"].includes(category)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid product category",
+                });
+            }
+            filter.category = category;
+        }
+        if (farmerId) {
+            if (!mongoose_1.default.Types.ObjectId.isValid(farmerId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid farmer ID",
+                });
+            }
+            filter.farmer = farmerId;
+        }
+        console.log("Query filter:", filter);
         const products = await productModel_1.default.find(filter)
-            .populate("farmer", "name email")
-            .sort({ createdAt: -1 });
+            .populate("farmer", "name email avatar")
+            .sort({ createdAt: -1 })
+            .lean();
+        console.log(`Found ${products.length} products`);
         res.status(200).json({
             success: true,
+            count: products.length,
             data: products,
         });
     }
     catch (error) {
         console.error("Error fetching products:", error);
+        let errorMessage = "Server error while fetching products";
+        if (error instanceof mongoose_1.default.Error.ValidationError) {
+            errorMessage = "Data validation error";
+        }
+        else if (error instanceof mongoose_1.default.Error.CastError) {
+            errorMessage = "Invalid data format";
+        }
         res.status(500).json({
             success: false,
-            message: "Server error while fetching products",
+            message: errorMessage,
         });
     }
 };
