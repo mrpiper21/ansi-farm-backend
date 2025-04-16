@@ -20,7 +20,7 @@ router.post(
 
 router.get("/", getProducts);
 router.get("/farmer/:id", getFarmerProducts);
-router.get("/farmer/produce/update/:id", updateProduct);
-router.get("/farmer/produce/delete/:id", deleteProduct);
+router.put("/farmer/produce/update/:id", updateProduct);
+router.delete("/farmer/produce/delete/:id", deleteProduct);
 
 export default router;
