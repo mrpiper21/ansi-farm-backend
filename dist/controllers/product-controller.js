@@ -102,7 +102,7 @@ const getProducts = async (req, res) => {
         const products = await productModel_1.default.find(filter)
             .populate({
             path: "farmer",
-            select: "name email avatar",
+            select: "userName email avatar",
             model: "User", // Explicitly specify the model
         })
             .sort({ createdAt: -1 })
