@@ -5,14 +5,13 @@ const cloudinary_1 = require("cloudinary");
 const stream_1 = require("stream");
 // Configure Cloudinary
 cloudinary_1.v2.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dxjkuamfb',
-    api_key: process.env.CLOUDINARY_API_KEY || '729491875225982',
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_SECRETE,
     api_secret: process.env.CLOUDINARY_API_SECRET,
-    secure: true
+    secure: true,
 });
 const uploadToCloudinary = async (file) => {
     return new Promise((resolve, reject) => {
-        // Set a timeout to reject the promise after 30 seconds
         const timeoutId = setTimeout(() => {
             reject(new Error("Upload timed out"));
         }, 30000); // 30 seconds timeout

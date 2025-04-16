@@ -2,22 +2,23 @@ import { v2 as cloudinary } from 'cloudinary';
 import { Readable } from 'stream';
 
 // Configure Cloudinary
-cloudinary.config({ 
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dxjkuamfb',
-  api_key: process.env.CLOUDINARY_API_KEY || '729491875225982',
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true
+cloudinary.config({
+	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+	api_key: process.env.CLOUDINARY_SECRETE,
+	api_secret: process.env.CLOUDINARY_API_SECRET,
+	secure: true,
 });
 
 interface UploadResult {
-  secure_url: string;
-  public_id: string;
-  [key: string]: any;
+	secure_url: string;
+	public_id: string;
+	[key: string]: any;
 }
 
-export const uploadToCloudinary = async (file: Express.Multer.File): Promise<UploadResult> => {
-  return new Promise((resolve, reject) => {
-		// Set a timeout to reject the promise after 30 seconds
+export const uploadToCloudinary = async (
+	file: Express.Multer.File
+): Promise<UploadResult> => {
+	return new Promise((resolve, reject) => {
 		const timeoutId = setTimeout(() => {
 			reject(new Error("Upload timed out"));
 		}, 30000); // 30 seconds timeout
