@@ -12,20 +12,25 @@ cloudinary_1.v2.config({
 });
 const uploadToCloudinary = async (file) => {
     return new Promise((resolve, reject) => {
+        // Set a timeout to reject the promise after 30 seconds
+        const timeoutId = setTimeout(() => {
+            reject(new Error("Upload timed out"));
+        }, 30000); // 30 seconds timeout
         const uploadStream = cloudinary_1.v2.uploader.upload_stream({
-            folder: 'farmers-market',
-            resource_type: 'auto',
-            allowed_formats: ['jpg', 'jpeg', 'png'],
+            folder: "farmers-market",
+            resource_type: "auto",
+            allowed_formats: ["jpg", "jpeg", "png"],
             transformation: [
-                { width: 800, height: 600, crop: 'limit' },
-                { quality: 'auto' },
-                { fetch_format: 'auto' }
-            ]
+                { width: 800, height: 600, crop: "limit" },
+                { quality: "auto" },
+                { fetch_format: "auto" },
+            ],
         }, (error, result) => {
+            clearTimeout(timeoutId); // Clear the timeout
             if (error)
                 return reject(error);
             if (!result)
-                return reject(new Error('Upload failed'));
+                return reject(new Error("Upload failed"));
             resolve(result);
         });
         const readableStream = new stream_1.Readable();

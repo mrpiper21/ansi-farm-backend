@@ -11,6 +11,7 @@ const resourcRoutes_1 = __importDefault(require("./routes/resourcRoutes"));
 const productRoutes_1 = __importDefault(require("./routes/productRoutes"));
 const db_1 = __importDefault(require("./config/db"));
 const morgan_1 = __importDefault(require("morgan"));
+const multer_1 = __importDefault(require("multer"));
 dotenv_1.default.config();
 // Verify environment variables are loaded
 console.log("Environment:", {
@@ -44,6 +45,26 @@ const startServer = async () => {
 app.use("/api/users", userRoutes_1.default);
 app.use("/api", resourcRoutes_1.default);
 app.use("/api/products", productRoutes_1.default);
+app.use((err, req, res, next) => {
+    if (err instanceof multer_1.default.MulterError) {
+        if (err.code === "LIMIT_FILE_SIZE") {
+            return res.status(400).json({
+                success: false,
+                message: "File size too large. Maximum size is 5MB.",
+            });
+        }
+        return res.status(400).json({
+            success: false,
+            message: err.message,
+        });
+    }
+    // For other errors
+    console.error(err);
+    res.status(500).json({
+        success: false,
+        message: "Something went wrong",
+    });
+});
 // Health check
 app.get("/", (req, res) => {
     res.json({ message: "API is running" });

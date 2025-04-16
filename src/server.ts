@@ -7,6 +7,7 @@ import productRoute from "./routes/productRoutes";
 import db from "./config/db";
 import morgan from "morgan";
 import { seedDatabase } from "./config/seeResources";
+import multer from "multer";
 dotenv.config();
 
 // Verify environment variables are loaded
@@ -45,6 +46,27 @@ const startServer = async () => {
 app.use("/api/users", userRoutes);
 app.use("/api", resourceRoute);
 app.use("/api/products", productRoute);
+app.use((err: any, req: any, res: any, next: any) => {
+	if (err instanceof multer.MulterError) {
+		if (err.code === "LIMIT_FILE_SIZE") {
+			return res.status(400).json({
+				success: false,
+				message: "File size too large. Maximum size is 5MB.",
+			});
+		}
+		return res.status(400).json({
+			success: false,
+			message: err.message,
+		});
+	}
+
+	// For other errors
+	console.error(err);
+	res.status(500).json({
+		success: false,
+		message: "Something went wrong",
+	});
+});
 
 // Health check
 app.get("/", (req: Request, res: Response) => {
