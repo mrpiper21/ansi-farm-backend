@@ -19,7 +19,7 @@ router.post(
 );
 
 router.get("/farmer/:id", getFarmerProducts);
-router.get("/farmer/produce", getProducts);
+router.get("/farmer/produce/get", getProducts);
 router.put("/farmer/produce/update/:id", updateProduct);
 router.delete("/farmer/produce/delete/:id", deleteProduct);
 

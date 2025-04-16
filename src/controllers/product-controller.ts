@@ -55,64 +55,106 @@ export const createProduct = async (req: any, res: any) => {
 
 export const getProducts = async (req: any, res: any) => {
 	console.log("Fetching farmer produce...");
+
 	try {
 		const { category, farmerId } = req.query;
+		const filter: mongoose.FilterQuery<typeof Product> = {};
 
-		// Create filter object
-		const filter: any = {};
-
+		// Validate and apply category filter
 		if (category) {
-			if (
-				!["fruits", "vegetables", "grains", "dairy", "herbs"].includes(category)
-			) {
+			if (typeof category !== "string") {
 				return res.status(400).json({
 					success: false,
-					message: "Invalid product category",
+					message: "Category must be a string",
+				});
+			}
+
+			const validCategories = [
+				"fruits",
+				"vegetables",
+				"grains",
+				"dairy",
+				"herbs",
+			];
+			if (!validCategories.includes(category)) {
+				return res.status(400).json({
+					success: false,
+					message: `Invalid product category. Must be one of: ${validCategories.join(
+						", "
+					)}`,
 				});
 			}
 			filter.category = category;
 		}
 
 		if (farmerId) {
+			if (typeof farmerId !== "string") {
+				return res.status(400).json({
+					success: false,
+					message: "Farmer ID must be a string",
+				});
+			}
+
 			if (!mongoose.Types.ObjectId.isValid(farmerId)) {
 				return res.status(400).json({
 					success: false,
-					message: "Invalid farmer ID",
+					message: "Invalid farmer ID format",
 				});
 			}
-			filter.farmer = farmerId;
+			filter.farmer = new mongoose.Types.ObjectId(farmerId);
 		}
 
-		console.log("Query filter:", filter);
-
+		// Execute query
 		const products = await Product.find(filter)
-			.populate("farmer", "name email avatar")
+			.populate({
+				path: "farmer",
+				select: "name email avatar",
+				model: "User", // Explicitly specify the model
+			})
 			.sort({ createdAt: -1 })
-			.lean();
-
-		console.log(`Found ${products.length} products`);
+			.lean()
+			.exec(); // Always use exec() with promises
 
 		res.status(200).json({
 			success: true,
 			count: products.length,
 			data: products,
 		});
-	} catch (error) {
+	} catch (error: unknown) {
 		console.error("Error fetching products:", error);
-		let errorMessage = "Server error while fetching products";
+
+		// Type-safe error handling
 		if (error instanceof mongoose.Error.ValidationError) {
-			errorMessage = "Data validation error";
-		} else if (error instanceof mongoose.Error.CastError) {
-			errorMessage = "Invalid data format";
+			return res.status(400).json({
+				success: false,
+				message: "Validation error",
+				errors: error.errors,
+			});
+		}
+
+		if (error instanceof mongoose.Error.CastError) {
+			return res.status(400).json({
+				success: false,
+				message: "Invalid data format",
+				field: error.path,
+			});
+		}
+
+		if (error instanceof Error) {
+			return res.status(500).json({
+				success: false,
+				message: "Server error while fetching products",
+				error:
+					process.env.NODE_ENV === "development" ? error.message : undefined,
+			});
 		}
 
 		res.status(500).json({
 			success: false,
-			message: errorMessage,
+			message: "Unknown server error",
 		});
 	}
 };
-
 export const getFarmerProducts = async (req: any, res: any) => {
 	try {
 		const farmerId = req.params.id;
