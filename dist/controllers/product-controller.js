@@ -251,7 +251,10 @@ exports.deleteProduct = deleteProduct;
 const getProductDetails = async (req, res) => {
     try {
         const productId = req.params.id;
-        const product = productModel_1.default.findById(productId);
+        const product = await productModel_1.default.findById(productId)
+            .populate("farmer", "userName email avatar") // only include needed fields
+            .lean()
+            .exec();
         if (!product) {
             return res.status(404).json({ message: "Product not found" });
         }

@@ -279,17 +279,20 @@ export const deleteProduct = async (req: any, res: any) => {
 
 
 export const getProductDetails = async (req: any, res: any) => {
-	try {
-		const productId = req.params.id;
-		const product = Product.findById(productId);
+    try {
+			const productId = req.params.id;
+			const product = await Product.findById(productId)
+				.populate("farmer", "userName email avatar") // only include needed fields
+				.lean()
+				.exec();
 
-		if (!product) {
-			return res.status(404).json({ message: "Product not found" });
+			if (!product) {
+				return res.status(404).json({ message: "Product not found" });
+			}
+
+			return res.json(product);
+		} catch (error) {
+			console.error("Error fetching product details:", error);
+			res.status(500).json({ message: "Internal server error" });
 		}
-
-		return res.json(product);
-	} catch (error) {
-		console.error("Error fetching product details:", error);
-		res.status(500).json({ message: "Internal server error" });
-	}
 };
