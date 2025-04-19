@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteProduct = exports.updateProduct = exports.getFarmerProducts = exports.getProducts = exports.createProduct = void 0;
+exports.getProductDetails = exports.deleteProduct = exports.updateProduct = exports.getFarmerProducts = exports.getProducts = exports.createProduct = void 0;
 const productModel_1 = __importDefault(require("../model/productModel"));
 const cloudinary_1 = require("../config/cloudinary"); // Optional for image uploads
 const mongoose_1 = __importDefault(require("mongoose"));
@@ -248,3 +248,18 @@ const deleteProduct = async (req, res) => {
     }
 };
 exports.deleteProduct = deleteProduct;
+const getProductDetails = async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const product = productModel_1.default.findById(productId);
+        if (!product) {
+            return res.status(404).json({ message: "Product not found" });
+        }
+        res.json(product);
+    }
+    catch (error) {
+        console.error("Error fetching product details:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+exports.getProductDetails = getProductDetails;
