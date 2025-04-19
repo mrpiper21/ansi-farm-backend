@@ -287,7 +287,7 @@ export const getProductDetails = async (req: any, res: any) => {
 			return res.status(404).json({ message: "Product not found" });
 		}
 
-		res.json(product);
+		return res.json(product);
 	} catch (error) {
 		console.error("Error fetching product details:", error);
 		res.status(500).json({ message: "Internal server error" });
