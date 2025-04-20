@@ -160,6 +160,7 @@ exports.getOrders = getOrders;
 const getFarmerOrderDetails = async (req, res) => {
     try {
         const { farmerId, orderId } = req.params;
+        console.log(farmerId, orderId);
         const order = await orderModel_1.default.findOne({
             _id: orderId,
             farmers: farmerId,

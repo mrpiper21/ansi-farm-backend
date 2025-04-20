@@ -180,6 +180,8 @@ export const getFarmerOrderDetails = async (req: any, res: any) => {
 	try {
 		const { farmerId, orderId } = req.params;
 
+        console.log(farmerId, orderId);
+
 		const order = await Order.findOne({
 			_id: orderId,
 			farmers: farmerId,
