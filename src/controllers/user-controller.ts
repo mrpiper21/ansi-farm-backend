@@ -171,15 +171,18 @@ export const getFarmers = async (req: any, res: any) => {
 
 export const getFarmerDetails = async (req: any, res: any) => {
 	try {
-		const farmer = await User.findById(req.params.id)
+		const farmerId = req.params.id;
+
+		// 1) Load the farmer’s core profile and their last 10 non-cancelled orders
+		const farmer = await User.findById(farmerId)
 			.select(
 				"userName email profileImage location description phone createdAt"
 			)
 			.populate({
 				path: "orders",
 				select: "status totalAmount createdAt",
-				match: { status: { $ne: "cancelled" } }, // Optional: filter out cancelled orders
-				options: { sort: { createdAt: -1 }, limit: 10 }, // Get latest 10 orders
+				match: { status: { $ne: "cancelled" } },
+				options: { sort: { createdAt: -1 }, limit: 10 },
 			})
 			.lean()
 			.exec();
@@ -191,16 +194,24 @@ export const getFarmerDetails = async (req: any, res: any) => {
 			});
 		}
 
-		// Get products count
-		const productsCount = await Product.countDocuments({
-			farmer: req.params.id,
-		});
+		// 2) Count total products
+		const productsCount = await Product.countDocuments({ farmer: farmerId });
 
+		// 3) Fetch the actual product documents
+		//    Adjust .select() to only send the fields you need on the client
+		const products = await Product.find({ farmer: farmerId })
+			.select("name price quantity imageUrl category createdAt")
+			.sort({ createdAt: -1 }) // newest first
+			.lean()
+			.exec();
+
+		// 4) Return everything in one response
 		res.json({
 			success: true,
 			data: {
 				...farmer,
 				productsCount,
+				products,
 			},
 		});
 	} catch (error) {
