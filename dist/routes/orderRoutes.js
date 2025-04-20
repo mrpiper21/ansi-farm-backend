@@ -7,6 +7,7 @@ const order_controller_1 = require("../controllers/order-controller");
 const express_1 = __importDefault(require("express"));
 const router = express_1.default.Router();
 router.post("/create", order_controller_1.createOrder);
+router.get("/farmer-orders/:farmerId", order_controller_1.getFarmerOrderDetails);
 router.get("/farmer-orders/single/:farmerId", order_controller_1.getFarmerOrderDetails);
 router.get("/farmer-orders/:id/status", order_controller_1.updateOrderStatus);
 exports.default = router;
