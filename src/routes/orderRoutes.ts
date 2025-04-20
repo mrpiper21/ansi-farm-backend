@@ -10,7 +10,7 @@ import express from "express";
 const router = express.Router();
 
 router.post("/create", createOrder);
-router.get("/farmer-orders/:farmerId", getFarmerOrderDetails);
+router.get("/farmer-orders/single/:farmerId", getFarmerOrderDetails);
 router.get("/farmer-orders/:id/status", updateOrderStatus);
 
 export default router
