@@ -3,11 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getFarmerDetails = exports.getFarmers = void 0;
 exports.registerUser = registerUser;
 exports.login = login;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const User_1 = __importDefault(require("../model/User"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const productModel_1 = __importDefault(require("../model/productModel"));
 async function registerUser(req, res) {
     console.log("registeration payload", req.body);
     try {
@@ -126,3 +128,54 @@ async function login(req, res) {
         });
     }
 }
+const getFarmers = async (req, res) => {
+    try {
+        const farmers = await User_1.default.find({ type: "farmer" })
+            .select("name email avatar location description")
+            .lean()
+            .exec();
+        // Add products count to each farmer
+        const farmersWithCounts = await Promise.all(farmers.map(async (farmer) => {
+            const count = await productModel_1.default.countDocuments({ farmer: farmer._id });
+            return { ...farmer, productsCount: count };
+        }));
+        res.json({
+            success: true,
+            data: farmersWithCounts,
+        });
+    }
+    catch (error) {
+        console.error("Error fetching farmers:", error);
+        res.status(500).json({
+            success: false,
+            error: "Failed to fetch farmers",
+        });
+    }
+};
+exports.getFarmers = getFarmers;
+const getFarmerDetails = async (req, res) => {
+    try {
+        const farmer = await User_1.default.findById(req.params.id)
+            .select("name email avatar location description phone createdAt")
+            .lean()
+            .exec();
+        if (!farmer) {
+            return res.status(404).json({
+                success: false,
+                error: "Farmer not found",
+            });
+        }
+        res.json({
+            success: true,
+            data: farmer,
+        });
+    }
+    catch (error) {
+        console.error("Error fetching farmer details:", error);
+        res.status(500).json({
+            success: false,
+            error: "Failed to fetch farmer details",
+        });
+    }
+};
+exports.getFarmerDetails = getFarmerDetails;

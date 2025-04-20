@@ -2,9 +2,10 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import User from '../model/User';
 import jwt from 'jsonwebtoken';
+import Product from "../model/productModel";
 
 async function registerUser(req: any, res: any) {
-  console.log("registeration payload", req.body)
+	console.log("registeration payload", req.body);
 	try {
 		const { userName, email, password, type = "client", location } = req.body;
 
@@ -139,5 +140,60 @@ async function login(req: any, res: any) {
 		});
 	}
 }
+
+export const getFarmers = async (req: any, res: any) => {
+	try {
+		const farmers = await User.find({ type: "farmer" })
+			.select("name email avatar location description")
+			.lean()
+			.exec();
+
+		// Add products count to each farmer
+		const farmersWithCounts = await Promise.all(
+			farmers.map(async (farmer) => {
+				const count = await Product.countDocuments({ farmer: farmer._id });
+				return { ...farmer, productsCount: count };
+			})
+		);
+
+		res.json({
+			success: true,
+			data: farmersWithCounts,
+		});
+	} catch (error) {
+		console.error("Error fetching farmers:", error);
+		res.status(500).json({
+			success: false,
+			error: "Failed to fetch farmers",
+		});
+	}
+};
+
+export const getFarmerDetails = async (req: any, res: any) => {
+	try {
+		const farmer = await User.findById(req.params.id)
+			.select("name email avatar location description phone createdAt")
+			.lean()
+			.exec();
+
+		if (!farmer) {
+			return res.status(404).json({
+				success: false,
+				error: "Farmer not found",
+			});
+		}
+
+		res.json({
+			success: true,
+			data: farmer,
+		});
+	} catch (error) {
+		console.error("Error fetching farmer details:", error);
+		res.status(500).json({
+			success: false,
+			error: "Failed to fetch farmer details",
+		});
+	}
+};
 
   export {registerUser, login} 
