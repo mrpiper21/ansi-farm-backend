@@ -156,7 +156,13 @@ exports.getFarmers = getFarmers;
 const getFarmerDetails = async (req, res) => {
     try {
         const farmer = await User_1.default.findById(req.params.id)
-            .select("name email avatar location description phone createdAt")
+            .select("userName email profileImage location description phone createdAt")
+            .populate({
+            path: "orders",
+            select: "status totalAmount createdAt",
+            match: { status: { $ne: "cancelled" } }, // Optional: filter out cancelled orders
+            options: { sort: { createdAt: -1 }, limit: 10 }, // Get latest 10 orders
+        })
             .lean()
             .exec();
         if (!farmer) {
@@ -165,9 +171,16 @@ const getFarmerDetails = async (req, res) => {
                 error: "Farmer not found",
             });
         }
+        // Get products count
+        const productsCount = await productModel_1.default.countDocuments({
+            farmer: req.params.id,
+        });
         res.json({
             success: true,
-            data: farmer,
+            data: {
+                ...farmer,
+                productsCount,
+            },
         });
     }
     catch (error) {

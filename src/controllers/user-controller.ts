@@ -172,7 +172,15 @@ export const getFarmers = async (req: any, res: any) => {
 export const getFarmerDetails = async (req: any, res: any) => {
 	try {
 		const farmer = await User.findById(req.params.id)
-			.select("name email avatar location description phone createdAt")
+			.select(
+				"userName email profileImage location description phone createdAt"
+			)
+			.populate({
+				path: "orders",
+				select: "status totalAmount createdAt",
+				match: { status: { $ne: "cancelled" } }, // Optional: filter out cancelled orders
+				options: { sort: { createdAt: -1 }, limit: 10 }, // Get latest 10 orders
+			})
 			.lean()
 			.exec();
 
@@ -183,9 +191,17 @@ export const getFarmerDetails = async (req: any, res: any) => {
 			});
 		}
 
+		// Get products count
+		const productsCount = await Product.countDocuments({
+			farmer: req.params.id,
+		});
+
 		res.json({
 			success: true,
-			data: farmer,
+			data: {
+				...farmer,
+				productsCount,
+			},
 		});
 	} catch (error) {
 		console.error("Error fetching farmer details:", error);

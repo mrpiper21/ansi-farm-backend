@@ -1,6 +1,7 @@
 
 
 import {
+	getFarmerDetails,
 	getFarmers,
 	login,
 	registerUser,
@@ -11,6 +12,6 @@ import { Router } from "express";
 const router = Router();
 
 router.post("/register", registerUser).post("/login", login);
-router.get("/farmers", getFarmers);
+router.get("/farmers", getFarmers).get("/farmers/single/:id", getFarmerDetails);
 
 export default router;
