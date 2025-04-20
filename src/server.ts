@@ -4,6 +4,7 @@ import cors from "cors";
 import userRoutes from "./routes/userRoutes";
 import resourceRoute from "./routes/resourcRoutes";
 import productRoute from "./routes/productRoutes";
+import orderRoute from "./routes/orderRoutes";
 import db from "./config/db";
 import morgan from "morgan";
 import { seedDatabase } from "./config/seeResources";
@@ -46,6 +47,7 @@ const startServer = async () => {
 app.use("/api/users", userRoutes);
 app.use("/api", resourceRoute);
 app.use("/api/products", productRoute);
+app.use("/api/orders", orderRoute);
 app.use((err: any, req: any, res: any, next: any) => {
 	if (err instanceof multer.MulterError) {
 		if (err.code === "LIMIT_FILE_SIZE") {

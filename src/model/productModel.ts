@@ -13,23 +13,23 @@ export interface IProduct extends Document {
 }
 
 const ProductSchema: Schema = new Schema({
-  name: { type: String, required: true },
-  category: { 
-    type: String, 
-    required: true,
-    enum: ['fruits', 'vegetables', 'grains', 'dairy', 'herbs'] 
-  },
-  description: { type: String },
-  price: { type: Number, required: true, min: 0 },
-  quantity: { type: String },
-  imageUrl: { type: String },
-  farmer: { 
-    type: Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true 
-  },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+	name: { type: String, required: true },
+	category: {
+		type: String,
+		required: true,
+		enum: ["fruits", "vegetables", "grains", "dairy", "herbs"],
+	},
+	description: { type: String },
+	price: { type: Number, required: true, min: 0 },
+	quantity: { type: Number, required: true, min: 0 },
+	imageUrl: { type: String },
+	farmer: {
+		type: Schema.Types.ObjectId,
+		ref: "User",
+		required: true,
+	},
+	createdAt: { type: Date, default: Date.now },
+	updatedAt: { type: Date, default: Date.now },
 });
 
 // Add index for better query performance

@@ -9,6 +9,7 @@ const cors_1 = __importDefault(require("cors"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const resourcRoutes_1 = __importDefault(require("./routes/resourcRoutes"));
 const productRoutes_1 = __importDefault(require("./routes/productRoutes"));
+const orderRoutes_1 = __importDefault(require("./routes/orderRoutes"));
 const db_1 = __importDefault(require("./config/db"));
 const morgan_1 = __importDefault(require("morgan"));
 const multer_1 = __importDefault(require("multer"));
@@ -45,6 +46,7 @@ const startServer = async () => {
 app.use("/api/users", userRoutes_1.default);
 app.use("/api", resourcRoutes_1.default);
 app.use("/api/products", productRoutes_1.default);
+app.use("/api/orders", orderRoutes_1.default);
 app.use((err, req, res, next) => {
     if (err instanceof multer_1.default.MulterError) {
         if (err.code === "LIMIT_FILE_SIZE") {

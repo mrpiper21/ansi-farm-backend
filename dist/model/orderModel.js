@@ -34,25 +34,53 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const ProductSchema = new mongoose_1.Schema({
-    name: { type: String, required: true },
-    category: {
-        type: String,
-        required: true,
-        enum: ["fruits", "vegetables", "grains", "dairy", "herbs"],
-    },
-    description: { type: String },
-    price: { type: Number, required: true, min: 0 },
-    quantity: { type: Number, required: true, min: 0 },
-    imageUrl: { type: String },
-    farmer: {
+const OrderSchema = new mongoose_1.Schema({
+    buyer: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: "User",
+        ref: 'User',
+        required: true
+    },
+    items: [{
+            product: {
+                type: mongoose_1.Schema.Types.ObjectId,
+                ref: 'Product',
+                required: true
+            },
+            quantity: {
+                type: Number,
+                required: true,
+                min: 1
+            },
+            price: {
+                type: Number,
+                required: true,
+                min: 0
+            },
+            farmer: {
+                type: mongoose_1.Schema.Types.ObjectId,
+                ref: 'User',
+                required: true
+            }
+        }],
+    farmers: [{
+            type: mongoose_1.Schema.Types.ObjectId,
+            ref: 'User'
+        }],
+    totalAmount: {
+        type: Number,
         required: true,
+        min: 0
+    },
+    status: {
+        type: String,
+        enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'],
+        default: 'pending'
     },
     createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
 });
-// Add index for better query performance
-ProductSchema.index({ category: 1, createdAt: -1 });
-exports.default = mongoose_1.default.model('Product', ProductSchema);
+// Indexes for better query performance
+OrderSchema.index({ buyer: 1, status: 1 });
+OrderSchema.index({ farmers: 1, status: 1 }); // For farmer order queries
+OrderSchema.index({ 'items.farmer': 1, status: 1 }); // For specific product orders
+exports.default = mongoose_1.default.model('Order', OrderSchema);
