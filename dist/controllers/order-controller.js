@@ -162,33 +162,33 @@ const getFarmerOrderDetails = async (req, res) => {
         const { farmerId, orderId } = req.params;
         const order = await orderModel_1.default.findOne({
             _id: orderId,
-            farmers: farmerId
+            farmers: farmerId,
         })
-            .populate('buyer', 'name email')
-            .populate('items.product', 'name imageUrl price')
-            .populate('items.farmer', 'name email')
+            .populate("buyer", "name email")
+            .populate("items.product", "name imageUrl price")
+            .populate("items.farmer", "name email")
             .exec();
         if (!order) {
             return res.status(404).json({
                 success: false,
-                error: 'Order not found or not associated with this farmer'
+                error: "Order not found or not associated with this farmer",
             });
         }
         // Filter items to only show those belonging to this farmer
-        const farmerItems = order.items.filter(item => item.farmer && item.farmer.toString() === farmerId);
+        const farmerItems = order.items.filter((item) => item.farmer && item.farmer.toString() === farmerId);
         res.json({
             success: true,
             data: {
                 ...order.toObject(),
-                items: farmerItems
-            }
+                items: farmerItems,
+            },
         });
     }
     catch (error) {
-        console.error('Error fetching farmer order details:', error);
+        console.error("Error fetching farmer order details:", error);
         res.status(500).json({
             success: false,
-            error: 'Failed to fetch order details'
+            error: "Failed to fetch order details",
         });
     }
 };
@@ -199,15 +199,15 @@ exports.getFarmerOrderDetails = getFarmerOrderDetails;
 const getOrderById = async (req, res) => {
     try {
         const order = await orderModel_1.default.findById(req.params.id)
-            .populate('buyer', 'name email')
-            .populate('items.product', 'name price imageUrl');
+            .populate("buyer", "name email")
+            .populate("items.product", "name price imageUrl");
         if (!order) {
-            return res.status(404).json({ error: 'Order not found' });
+            return res.status(404).json({ error: "Order not found" });
         }
         res.json(order);
     }
     catch (error) {
-        res.status(500).json({ error: 'Failed to fetch order' });
+        res.status(500).json({ error: "Failed to fetch order" });
     }
 };
 exports.getOrderById = getOrderById;
@@ -215,16 +215,49 @@ exports.getOrderById = getOrderById;
  * Update order status (e.g., from 'pending' to 'confirmed')
  */
 const updateOrderStatus = async (req, res) => {
+    const session = await mongoose_1.default.startSession();
+    session.startTransaction();
     try {
+        const { id } = req.params;
         const { status } = req.body;
-        const order = await orderModel_1.default.findByIdAndUpdate(req.params.id, { status, updatedAt: Date.now() }, { new: true });
-        if (!order) {
-            return res.status(404).json({ error: 'Order not found' });
+        // Validate input
+        if (!["pending", "confirmed", "shipped", "delivered", "cancelled"].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid status value",
+            });
         }
-        res.json(order);
+        const order = await orderModel_1.default.findByIdAndUpdate(id, {
+            status,
+            updatedAt: new Date(),
+        }, { new: true, session })
+            .populate("buyer", "name email")
+            .populate("items.product", "name imageUrl price")
+            .populate("items.farmer", "name email");
+        if (!order) {
+            await session.abortTransaction();
+            return res.status(404).json({
+                success: false,
+                error: "Order not found",
+            });
+        }
+        await session.commitTransaction();
+        res.json({
+            success: true,
+            message: "Order status updated successfully",
+            data: order,
+        });
     }
     catch (error) {
-        res.status(500).json({ error: 'Failed to update order' });
+        await session.abortTransaction();
+        console.error("Error updating order status:", error);
+        res.status(500).json({
+            success: false,
+            error: "Failed to update order status",
+        });
+    }
+    finally {
+        session.endSession();
     }
 };
 exports.updateOrderStatus = updateOrderStatus;

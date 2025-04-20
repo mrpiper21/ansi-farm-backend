@@ -79,7 +79,6 @@ const OrderSchema = new mongoose_1.Schema({
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
-// Indexes for better query performance
 OrderSchema.index({ buyer: 1, status: 1 });
 OrderSchema.index({ farmers: 1, status: 1 }); // For farmer order queries
 OrderSchema.index({ 'items.farmer': 1, status: 1 }); // For specific product orders

@@ -176,82 +176,124 @@ export const getOrders = async (req: Request, res: Response) => {
   }
 };
 
-export const getFarmerOrderDetails = async (req: Request, res: Response) => {
-    try {
-      const { farmerId, orderId } = req.params;
-  
-      const order = await Order.findOne({
-        _id: orderId,
-        farmers: farmerId
-      })
-      .populate('buyer', 'name email')
-      .populate('items.product', 'name imageUrl price')
-      .populate('items.farmer', 'name email')
-      .exec();
-  
-      if (!order) {
-        return res.status(404).json({ 
-          success: false,
-          error: 'Order not found or not associated with this farmer' 
-        });
-      }
-  
-      // Filter items to only show those belonging to this farmer
-      const farmerItems = order.items.filter(item => 
-        item.farmer && item.farmer.toString() === farmerId
-      );
-  
-      res.json({
-        success: true,
-        data: {
-          ...order.toObject(),
-          items: farmerItems
-        }
-      });
-    } catch (error) {
-      console.error('Error fetching farmer order details:', error);
-      res.status(500).json({ 
-        success: false,
-        error: 'Failed to fetch order details' 
-      });
-    }
-  };
+export const getFarmerOrderDetails = async (req: any, res: any) => {
+	try {
+		const { farmerId, orderId } = req.params;
+
+		const order = await Order.findOne({
+			_id: orderId,
+			farmers: farmerId,
+		})
+			.populate("buyer", "name email")
+			.populate("items.product", "name imageUrl price")
+			.populate("items.farmer", "name email")
+			.exec();
+
+		if (!order) {
+			return res.status(404).json({
+				success: false,
+				error: "Order not found or not associated with this farmer",
+			});
+		}
+
+		// Filter items to only show those belonging to this farmer
+		const farmerItems = order.items.filter(
+			(item) => item.farmer && item.farmer.toString() === farmerId
+		);
+
+		res.json({
+			success: true,
+			data: {
+				...order.toObject(),
+				items: farmerItems,
+			},
+		});
+	} catch (error) {
+		console.error("Error fetching farmer order details:", error);
+		res.status(500).json({
+			success: false,
+			error: "Failed to fetch order details",
+		});
+	}
+};
 
 /**
  * Get a single order by ID
  */
 export const getOrderById = async (req: Request, res: Response) => {
-  try {
-    const order = await Order.findById(req.params.id)
-      .populate('buyer', 'name email')
-      .populate('items.product', 'name price imageUrl');
-    if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
-    res.json(order);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch order' });
-  }
+	try {
+		const order = await Order.findById(req.params.id)
+			.populate("buyer", "name email")
+			.populate("items.product", "name price imageUrl");
+		if (!order) {
+			return res.status(404).json({ error: "Order not found" });
+		}
+		res.json(order);
+	} catch (error) {
+		res.status(500).json({ error: "Failed to fetch order" });
+	}
 };
 
 /**
  * Update order status (e.g., from 'pending' to 'confirmed')
  */
-export const updateOrderStatus = async (req: Request, res: Response) => {
-  try {
-    const { status } = req.body;
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status, updatedAt: Date.now() },
-      { new: true }
-    );
-    if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
-    res.json(order);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update order' });
-  }
+export const updateOrderStatus = async (req: any, res: any) => {
+	const session = await mongoose.startSession();
+	session.startTransaction();
+
+	try {
+		const { id } = req.params;
+		const { status } = req.body;
+
+		// Validate input
+		if (
+			!["pending", "confirmed", "shipped", "delivered", "cancelled"].includes(
+				status
+			)
+		) {
+			return res.status(400).json({
+				success: false,
+				error: "Invalid status value",
+			});
+		}
+
+		const order = await Order.findByIdAndUpdate(
+			id,
+			{
+				status,
+				updatedAt: new Date(),
+			},
+			{ new: true, session }
+		)
+			.populate("buyer", "name email")
+			.populate("items.product", "name imageUrl price")
+			.populate("items.farmer", "name email");
+
+		if (!order) {
+			await session.abortTransaction();
+			return res.status(404).json({
+				success: false,
+				error: "Order not found",
+			});
+		}
+
+		await session.commitTransaction();
+
+		res.json({
+			success: true,
+			message: "Order status updated successfully",
+			data: order,
+		});
+	} catch (error) {
+		await session.abortTransaction();
+		console.error("Error updating order status:", error);
+		res.status(500).json({
+			success: false,
+			error: "Failed to update order status",
+		});
+	} finally {
+		session.endSession();
+	}
 };
 
 /**
