@@ -9,5 +9,5 @@ const router = express_1.default.Router();
 router.post("/create", order_controller_1.createOrder);
 router.get("/farmer-orders/:farmerId", order_controller_1.getFarmerOrders);
 router.get("/farmer-orders/single/:farmerId/:orderId", order_controller_1.getFarmerOrderDetails);
-router.get("/farmer-orders/:id/status", order_controller_1.updateOrderStatus);
+router.patch("/farmer-orders/:id/status", order_controller_1.updateOrderStatus);
 exports.default = router;
