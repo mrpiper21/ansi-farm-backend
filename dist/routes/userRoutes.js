@@ -1,9 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const farmCode_controller_1 = require("../controllers/farmCode-controller");
 const user_controller_1 = require("../controllers/user-controller");
 const express_1 = require("express");
 // import authenticate from '@/middlewares/auth';
 const router = (0, express_1.Router)();
 router.post("/register", user_controller_1.registerUser).post("/login", user_controller_1.login);
 router.get("/farmers", user_controller_1.getFarmers).get("/farmers/single/:id", user_controller_1.getFarmerDetails);
+router.post("/generate", farmCode_controller_1.generateFarmerCode);
+router.post("/validate", farmCode_controller_1.validateFarmerCode);
 exports.default = router;
