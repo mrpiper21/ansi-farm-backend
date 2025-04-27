@@ -13,6 +13,7 @@ import multer from "multer";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { Chat, Message } from "./model/chatModel";
+import User from "./model/User";
 
 dotenv.config();
 
@@ -44,9 +45,26 @@ io.on("connection", (socket) => {
 	console.log("A user connected:", socket.id);
 
 	// Join a room based on user ID
-	socket.on("join", (userId: string) => {
-		socket.join(userId);
-		console.log(`User ${userId} joined their room`);
+	socket.on("join", async (userId: string) => {
+		try {
+			// Validate user exists
+			const user = await User.findById(userId);
+			if (!user) {
+				console.log(`User ${userId} not found`);
+				return;
+			}
+
+			socket.join(userId);
+			console.log(`User ${userId} joined their room`);
+
+			// Notify user they're connected
+			socket.emit("connectionStatus", {
+				status: "connected",
+				userId,
+			});
+		} catch (error) {
+			console.error("Error joining room:", error);
+		}
 	});
 
 	// Handle sending messages
@@ -54,34 +72,93 @@ io.on("connection", (socket) => {
 		try {
 			const { senderId, receiverId, content, chatId } = data;
 
+			// Validate required fields
+			if (!senderId || !receiverId || !content || !chatId) {
+				throw new Error("Missing required message fields");
+			}
+
+			// Get sender and receiver
+			const [sender, receiver] = await Promise.all([
+				User.findById(senderId),
+				User.findById(receiverId),
+			]);
+
+			if (!sender || !receiver) {
+				throw new Error("Sender or receiver not found");
+			}
+
+			// Create and save message
 			const newMessage = new Message({
-				sender: senderId,
-				receiver: receiverId,
+				sender: sender._id,
+				receiver: receiver._id,
 				content,
 			});
 
 			await newMessage.save();
-			const chat = await Chat.findByIdAndUpdate(
+
+			// Update chat with new message
+			const updatedChat = await Chat.findByIdAndUpdate(
 				chatId,
 				{
 					$push: { messages: newMessage._id },
 					$set: { updatedAt: new Date() },
 				},
 				{ new: true }
-			);
+			).populate("participants");
+
+			if (!updatedChat) {
+				throw new Error("Chat not found");
+			}
+
+			// Prepare response data
+			const messageData = {
+				_id: newMessage._id,
+				sender: {
+					_id: sender._id,
+					userName: sender.userName,
+					profileImage: sender.profileImage,
+				},
+				receiver: {
+					_id: receiver._id,
+					userName: receiver.userName,
+				},
+				content,
+				timestamp: newMessage.timestamp,
+				read: false,
+				chatId,
+			};
 
 			// Emit to sender and receiver
-			io.to(senderId).emit("newMessage", {
-				chatId,
-				message: newMessage,
-			});
+			io.to(senderId).emit("newMessage", messageData);
+			io.to(receiverId).emit("newMessage", messageData);
 
-			io.to(receiverId).emit("newMessage", {
-				chatId,
-				message: newMessage,
-			});
-		} catch (error) {
+			// Update unread count for receiver
+			const receiverChat = await Chat.findOneAndUpdate(
+				{ _id: chatId, participants: receiverId },
+				{ $inc: { unreadCount: 1 } },
+				{ new: true }
+			);
+		} catch (error: any) {
 			console.error("Error sending message:", error);
+			socket.emit("messageError", {
+				error: "Failed to send message",
+				details: error?.message,
+			});
+		}
+	});
+
+	// Handle message read status
+	socket.on("markAsRead", async ({ messageId, userId }) => {
+		try {
+			await Message.findByIdAndUpdate(messageId, { read: true });
+
+			// Update unread count in chat
+			await Chat.findOneAndUpdate(
+				{ messages: messageId, participants: userId },
+				{ $inc: { unreadCount: -1 } }
+			);
+		} catch (error) {
+			console.error("Error marking message as read:", error);
 		}
 	});
 

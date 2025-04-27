@@ -17,6 +17,7 @@ const multer_1 = __importDefault(require("multer"));
 const http_1 = require("http");
 const socket_io_1 = require("socket.io");
 const chatModel_1 = require("./model/chatModel");
+const User_1 = __importDefault(require("./model/User"));
 dotenv_1.default.config();
 // Verify environment variables are loaded
 console.log("Environment:", {
@@ -41,36 +42,97 @@ app.use((0, morgan_1.default)("dev"));
 io.on("connection", (socket) => {
     console.log("A user connected:", socket.id);
     // Join a room based on user ID
-    socket.on("join", (userId) => {
-        socket.join(userId);
-        console.log(`User ${userId} joined their room`);
+    socket.on("join", async (userId) => {
+        try {
+            // Validate user exists
+            const user = await User_1.default.findById(userId);
+            if (!user) {
+                console.log(`User ${userId} not found`);
+                return;
+            }
+            socket.join(userId);
+            console.log(`User ${userId} joined their room`);
+            // Notify user they're connected
+            socket.emit("connectionStatus", {
+                status: "connected",
+                userId,
+            });
+        }
+        catch (error) {
+            console.error("Error joining room:", error);
+        }
     });
     // Handle sending messages
     socket.on("sendMessage", async (data) => {
         try {
             const { senderId, receiverId, content, chatId } = data;
+            // Validate required fields
+            if (!senderId || !receiverId || !content || !chatId) {
+                throw new Error("Missing required message fields");
+            }
+            // Get sender and receiver
+            const [sender, receiver] = await Promise.all([
+                User_1.default.findById(senderId),
+                User_1.default.findById(receiverId),
+            ]);
+            if (!sender || !receiver) {
+                throw new Error("Sender or receiver not found");
+            }
+            // Create and save message
             const newMessage = new chatModel_1.Message({
-                sender: senderId,
-                receiver: receiverId,
+                sender: sender._id,
+                receiver: receiver._id,
                 content,
             });
             await newMessage.save();
-            const chat = await chatModel_1.Chat.findByIdAndUpdate(chatId, {
+            // Update chat with new message
+            const updatedChat = await chatModel_1.Chat.findByIdAndUpdate(chatId, {
                 $push: { messages: newMessage._id },
                 $set: { updatedAt: new Date() },
-            }, { new: true });
+            }, { new: true }).populate("participants");
+            if (!updatedChat) {
+                throw new Error("Chat not found");
+            }
+            // Prepare response data
+            const messageData = {
+                _id: newMessage._id,
+                sender: {
+                    _id: sender._id,
+                    userName: sender.userName,
+                    profileImage: sender.profileImage,
+                },
+                receiver: {
+                    _id: receiver._id,
+                    userName: receiver.userName,
+                },
+                content,
+                timestamp: newMessage.timestamp,
+                read: false,
+                chatId,
+            };
             // Emit to sender and receiver
-            io.to(senderId).emit("newMessage", {
-                chatId,
-                message: newMessage,
-            });
-            io.to(receiverId).emit("newMessage", {
-                chatId,
-                message: newMessage,
-            });
+            io.to(senderId).emit("newMessage", messageData);
+            io.to(receiverId).emit("newMessage", messageData);
+            // Update unread count for receiver
+            const receiverChat = await chatModel_1.Chat.findOneAndUpdate({ _id: chatId, participants: receiverId }, { $inc: { unreadCount: 1 } }, { new: true });
         }
         catch (error) {
             console.error("Error sending message:", error);
+            socket.emit("messageError", {
+                error: "Failed to send message",
+                details: error?.message,
+            });
+        }
+    });
+    // Handle message read status
+    socket.on("markAsRead", async ({ messageId, userId }) => {
+        try {
+            await chatModel_1.Message.findByIdAndUpdate(messageId, { read: true });
+            // Update unread count in chat
+            await chatModel_1.Chat.findOneAndUpdate({ messages: messageId, participants: userId }, { $inc: { unreadCount: -1 } });
+        }
+        catch (error) {
+            console.error("Error marking message as read:", error);
         }
     });
     socket.on("disconnect", () => {
