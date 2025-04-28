@@ -9,28 +9,25 @@ export interface IMessage extends Document {
 }
 
 const messageSchema: Schema = new Schema({
-  sender: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  receiver: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  content: {
-    type: String,
-    required: true,
-  },
-  timestamp: {
-    type: Date,
-    default: Date.now,
-  },
-  read: {
-    type: Boolean,
-    default: false,
-  },
+	sender: {
+		type: Schema.Types.ObjectId,
+		ref: "User",
+	},
+	receiver: {
+		type: Schema.Types.ObjectId,
+		ref: "User",
+	},
+	content: {
+		type: String,
+	},
+	timestamp: {
+		type: Date,
+		default: Date.now,
+	},
+	read: {
+		type: Boolean,
+		default: false,
+	},
 });
 
 export interface IChat extends Document {
